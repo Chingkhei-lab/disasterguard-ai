@@ -33,6 +33,8 @@ venv.bak/
 *.csv
 *.pkl
 *.txt
+!risk_model.pkl
+!label_encoder.pkl
 !requirements.txt
 !render.yaml
 
