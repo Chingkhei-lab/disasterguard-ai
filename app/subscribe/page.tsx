@@ -2,7 +2,7 @@
 
 import { CheckCircle2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
 import { SUBSCRIBE_LOCATIONS } from "@/lib/constants";
 
 type SubscribeResponse = {
@@ -11,14 +11,14 @@ type SubscribeResponse = {
   error: string | null;
 };
 
-export default function SubscribePage() {
+function SubscribePageContent() {
   const params = useSearchParams();
 
   const [telegramId, setTelegramId] = useState("");
   const [selectedLocationIndex, setSelectedLocationIndex] = useState(0);
-  const [locationName, setLocationName] = useState(SUBSCRIBE_LOCATIONS[0].name);
-  const [latitude, setLatitude] = useState(SUBSCRIBE_LOCATIONS[0].lat);
-  const [longitude, setLongitude] = useState(SUBSCRIBE_LOCATIONS[0].lng);
+  const [locationName, setLocationName] = useState<string>(SUBSCRIBE_LOCATIONS[0].name);
+  const [latitude, setLatitude] = useState<number>(SUBSCRIBE_LOCATIONS[0].lat);
+  const [longitude, setLongitude] = useState<number>(SUBSCRIBE_LOCATIONS[0].lng);
 
   const [language, setLanguage] = useState<"hindi" | "english">("hindi");
   const [alertMode, setAlertMode] = useState<"text" | "voice" | "both">("both");
@@ -222,5 +222,13 @@ export default function SubscribePage() {
         ) : null}
       </section>
     </main>
+  );
+}
+
+export default function SubscribePage() {
+  return (
+    <Suspense fallback={<div className="mx-auto w-full max-w-7xl px-4 py-6"><div className="h-96 animate-pulse rounded-xl bg-slate-700/60" /></div>}>
+      <SubscribePageContent />
+    </Suspense>
   );
 }

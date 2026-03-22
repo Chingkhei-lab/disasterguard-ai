@@ -1,7 +1,7 @@
 import axios from "axios";
 import { NextResponse } from "next/server";
 
-export const revalidate = 1800;
+export const dynamic = "force-dynamic";
 
 const WEATHER_HOURLY_FIELDS =
   "rain,soil_moisture_0_to_1cm,windspeed_10m,windgusts_10m,temperature_2m,relativehumidity_2m,surface_pressure";

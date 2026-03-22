@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
 
 import { RiskResult } from "@/components/RiskResult";
 import type { DisasterMarkerData, FireMarkerData } from "@/components/Map";
@@ -52,7 +52,7 @@ function toWeatherData(payload: WeatherApiPayload["data"]): WeatherData {
   };
 }
 
-export default function MapPage() {
+function MapPageContent() {
   const params = useSearchParams();
   const [fires, setFires] = useState<FireMarkerData[]>([]);
   const [disasters, setDisasters] = useState<DisasterMarkerData[]>([]);
@@ -261,5 +261,13 @@ export default function MapPage() {
         </aside>
       </section>
     </main>
+  );
+}
+
+export default function MapPage() {
+  return (
+    <Suspense fallback={<div className="mx-auto w-full max-w-7xl px-4 py-6"><div className="h-[600px] animate-pulse rounded-xl bg-slate-700/60" /></div>}>
+      <MapPageContent />
+    </Suspense>
   );
 }

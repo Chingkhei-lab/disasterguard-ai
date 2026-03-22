@@ -1,7 +1,7 @@
 import axios from "axios";
 import { NextResponse } from "next/server";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 function parseCsvLine(line: string): string[] {
   const values: string[] = [];

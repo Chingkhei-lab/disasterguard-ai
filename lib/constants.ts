@@ -8,9 +8,9 @@ export const TARGET_REGIONS = [
 ] as const;
 
 export const MAP_DEFAULT = {
-  center: [25.0, 93.0] as const,
+  center: [25.0, 93.0] as [number, number],
   zoom: 7,
-} as const;
+};
 
 export const COLORS = {
   NORMAL: { bg: "#16a34a", text: "#ffffff", badge: "#dcfce7" },
