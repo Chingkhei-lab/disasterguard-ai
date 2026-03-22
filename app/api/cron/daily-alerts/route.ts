@@ -5,6 +5,8 @@ import { ALERT_TEMPLATES } from "@/lib/constants";
 import { getSubscriptions, saveAlertLog } from "@/lib/supabase";
 import type { PredictResponse, RiskLevel, Subscription, WeatherData } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 type ApiResponse<T> = {
   success: boolean;
   data: T;
