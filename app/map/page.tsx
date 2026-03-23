@@ -128,9 +128,9 @@ function MapPageContent() {
     setIsAnalyzing(true);
 
     try {
-      const weatherRes = await fetch(`/api/weather?lat=${lat}&lng=${lng}`);
+      const weatherRes = await fetch(`/api/weather?lat=${lat}&lng=${lng}&tomorrow=true`);
       const weatherPayload = (await weatherRes.json()) as WeatherApiPayload;
-      const weather = toWeatherData(weatherPayload.data);
+      const weather = weatherPayload.data as any; // Ignore type since we changed the shape for tomorrow=true
 
       const riskRes = await fetch("/api/risk", {
         method: "POST",
@@ -248,6 +248,9 @@ function MapPageContent() {
 
           {weatherData && riskResult ? (
             <>
+              <p className="text-sm font-semibold text-blue-400">
+                Based on tomorrow's forecast
+              </p>
               <WeatherPanel weatherData={weatherData} />
               <RiskResult result={riskResult} location={locationName} weatherData={weatherData} />
               <Link

@@ -39,6 +39,14 @@ yarn-error.log*
 # vercel
 .vercel
 
+# ML data files — too large for GitHub
+ml_service/raw_data.csv
+ml_service/clean_data.csv
+ml_service/labeled_data.csv
+ml_service/real_event_data.csv
+ml_service/risk_model_old.pkl
+ml_service/label_encoder_old.pkl
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

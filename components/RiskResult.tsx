@@ -19,7 +19,7 @@ const RISK_BG_CLASS = {
 } as const;
 
 function getFallbackBriefing(location: string): string {
-  return ALERT_TEMPLATES.NORMAL.replace("{location}", location);
+  return `✅ Conditions normal for ${location} tomorrow. No immediate threats detected.`;
 }
 
 function confidenceToPercent(confidence: number): number {

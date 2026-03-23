@@ -13,59 +13,34 @@ type ApiResponse<T> = {
   error: string | null;
 };
 
-type WeatherApiData = {
-  hourly: {
-    rain?: number[];
-    soil_moisture_0_to_1cm?: number[];
-    windspeed_10m?: number[];
-    windgusts_10m?: number[];
-    temperature_2m?: number[];
-    relativehumidity_2m?: number[];
-    surface_pressure?: number[];
-  };
-};
+// Removed WeatherApiData, readFirst, and toWeatherData functions since we're using the pre-aggregated data from the API now.
 
-function readFirst(values: number[] | undefined): number {
-  const value = values?.[0];
-  return typeof value === "number" && Number.isFinite(value) ? value : 0;
-}
-
-function toWeatherData(data: WeatherApiData): WeatherData {
-  const hourly = data.hourly ?? {};
-  const rain = hourly.rain ?? [];
-
-  return {
-    rain_current: readFirst(rain),
-    rain_24h_forecast: rain.slice(0, 24).reduce((sum, value) => sum + (value ?? 0), 0),
-    wind_speed: readFirst(hourly.windspeed_10m),
-    wind_gusts: readFirst(hourly.windgusts_10m),
-    temperature: readFirst(hourly.temperature_2m),
-    humidity: readFirst(hourly.relativehumidity_2m),
-    pressure: readFirst(hourly.surface_pressure),
-    soil_moisture: readFirst(hourly.soil_moisture_0_to_1cm),
-  };
-}
-
-function buildAlertText(riskLevel: RiskLevel, riskType: PredictResponse["risk_type"], location: string): string {
+function buildAlertText(riskLevel: RiskLevel, riskType: PredictResponse["risk_type"], location: string, date: string): string {
   const safeLocation = location || "your area";
+  let actionText = "";
 
   if (riskLevel === "CRITICAL" && riskType === "FLOOD") {
-    return ALERT_TEMPLATES.FLOOD_CRITICAL.replace("{location}", safeLocation);
-  }
-  if (riskLevel === "CRITICAL" && riskType === "CYCLONE") {
-    return ALERT_TEMPLATES.CYCLONE_CRITICAL.replace("{location}", safeLocation);
-  }
-  if (riskLevel === "HIGH" && riskType === "FLOOD") {
-    return ALERT_TEMPLATES.FLOOD_HIGH.replace("{location}", safeLocation);
-  }
-  if (riskLevel === "HIGH" && riskType === "CYCLONE") {
-    return ALERT_TEMPLATES.CYCLONE_HIGH.replace("{location}", safeLocation);
-  }
-  if (riskType === "HEATWAVE") {
-    return ALERT_TEMPLATES.HEATWAVE_HIGH.replace("{location}", safeLocation);
+    actionText = ALERT_TEMPLATES.FLOOD_CRITICAL;
+  } else if (riskLevel === "CRITICAL" && riskType === "CYCLONE") {
+    actionText = ALERT_TEMPLATES.CYCLONE_CRITICAL;
+  } else if (riskLevel === "CRITICAL" && riskType === "HEATWAVE") {
+    // We added HEATWAVE_CRITICAL to constants
+    actionText = (ALERT_TEMPLATES as any).HEATWAVE_CRITICAL || "🔴 CRITICAL Heat Alert for {location} tomorrow. Extreme heat expected. Stay indoors.";
+  } else if (riskLevel === "HIGH" && riskType === "FLOOD") {
+    actionText = ALERT_TEMPLATES.FLOOD_HIGH;
+  } else if (riskLevel === "HIGH" && riskType === "CYCLONE") {
+    actionText = ALERT_TEMPLATES.CYCLONE_HIGH;
+  } else if (riskType === "HEATWAVE") {
+    actionText = ALERT_TEMPLATES.HEATWAVE_HIGH;
   }
 
-  return `⚠️ ${riskLevel} ${riskType} alert for ${safeLocation}. Stay alert and follow local guidance.`;
+  if (actionText) {
+    actionText = actionText.replace("{location}", safeLocation);
+  } else {
+    actionText = `Stay alert and follow local guidance.`;
+  }
+
+  return `⚠️ DisasterGuard AI\nTomorrow (${date}) forecast for ${safeLocation}:\nRisk: ${riskLevel} ${riskType}\n${actionText}\nStay safe.`;
 }
 
 async function processSubscription(
@@ -74,7 +49,7 @@ async function processSubscription(
   subscription: Subscription,
 ): Promise<boolean> {
   const weatherRes = await fetch(
-    `${origin}/api/weather?lat=${subscription.latitude}&lng=${subscription.longitude}`,
+    `${origin}/api/weather?lat=${subscription.latitude}&lng=${subscription.longitude}&tomorrow=true`,
     { method: "GET", cache: "no-store" },
   );
 
@@ -82,8 +57,8 @@ async function processSubscription(
     throw new Error(`Weather fetch failed for ${subscription.location_name}`);
   }
 
-  const weatherPayload = (await weatherRes.json()) as ApiResponse<WeatherApiData>;
-  const weatherData = toWeatherData(weatherPayload.data);
+  const weatherPayload = (await weatherRes.json()) as ApiResponse<WeatherData & { forecast_for: string }>;
+  const weatherData = weatherPayload.data;
 
   const riskRes = await fetch(`${origin}/api/risk`, {
     method: "POST",
@@ -103,7 +78,7 @@ async function processSubscription(
     return false;
   }
 
-  const alertText = buildAlertText(result.risk_level, result.risk_type, subscription.location_name);
+  const alertText = buildAlertText(result.risk_level, result.risk_type, subscription.location_name, weatherData.forecast_for);
 
   await axios.post(
     `https://api.telegram.org/bot${token}/sendMessage`,

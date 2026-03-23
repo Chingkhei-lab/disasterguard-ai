@@ -28,16 +28,18 @@ export const COLORS = {
 
 export const ALERT_TEMPLATES = {
   FLOOD_HIGH:
-    "⚠️ Flood Warning for {location}. Heavy rainfall expected in next 24hrs. Avoid low-lying areas.",
+    "⚠️ Flood Warning for {location} tomorrow. Heavy rainfall expected. Avoid low-lying areas and check embankments.",
   FLOOD_CRITICAL:
-    "🔴 CRITICAL Flood Alert for {location}. Evacuate low-lying areas immediately.",
+    "🔴 CRITICAL Flood Alert for {location} tomorrow. Prepare for evacuation of low-lying areas. Do not farm near riverbanks.",
   CYCLONE_HIGH:
-    "⚠️ Cyclone Warning for {location}. High winds expected. Secure loose structures.",
+    "⚠️ Storm Warning for {location} tomorrow. High winds expected. Secure crops and loose structures.",
   CYCLONE_CRITICAL:
-    "🔴 CRITICAL Cyclone Alert for {location}. Seek shelter immediately.",
+    "🔴 CRITICAL Storm Alert for {location} tomorrow. Seek shelter. Do not go to open fields.",
   HEATWAVE_HIGH:
-    "⚠️ Heatwave Warning for {location}. Avoid outdoor work between 11am-4pm.",
-  NORMAL: "✅ Conditions normal for {location}. No immediate threats detected.",
+    "⚠️ Heat Warning for {location} tomorrow. Avoid outdoor work between 11am and 4pm. Keep livestock in shade.",
+  HEATWAVE_CRITICAL:
+    "🔴 CRITICAL Heat Alert for {location} tomorrow. Extreme heat expected. Stay indoors.",
+  NORMAL: null,
 } as const;
 
 export type RISK_LEVELS = "NORMAL" | "MODERATE" | "HIGH" | "CRITICAL";

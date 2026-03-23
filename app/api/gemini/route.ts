@@ -43,8 +43,11 @@ function templateBriefing(riskLevel: RiskLevel, riskType: GeminiRequestBody["ris
   if (riskLevel === "HIGH" && riskType === "HEATWAVE") {
     return ALERT_TEMPLATES.HEATWAVE_HIGH.replace("{location}", safeLocation);
   }
+  if (riskLevel === "CRITICAL" && riskType === "HEATWAVE") {
+    return (ALERT_TEMPLATES as any).HEATWAVE_CRITICAL?.replace("{location}", safeLocation) || `🔴 CRITICAL Heat Alert for ${safeLocation} tomorrow. Extreme heat expected. Stay indoors.`;
+  }
 
-  return ALERT_TEMPLATES.NORMAL.replace("{location}", safeLocation);
+  return `✅ Conditions normal for ${safeLocation} tomorrow. No immediate threats detected.`;
 }
 
 function isValidBody(body: unknown): body is GeminiRequestBody {
