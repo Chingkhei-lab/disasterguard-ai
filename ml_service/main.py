@@ -11,21 +11,28 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# ── Load model on startup ──────────────────────────────────
-MODEL_LOADED = False
+# ── Lazy model loading ─────────────────────────────────────
+# Load on first request not at startup
+# This lets the server start immediately and pass Render's port scan
 model = None
 le = None
+MODEL_LOADED = False
 TRAINED_AT = "2022-01-01 to 2024-01-01"
 
-try:
-    model = joblib.load("risk_model.pkl")
-    le = joblib.load("label_encoder.pkl")
-    MODEL_LOADED = True
-    print("✓ Model loaded successfully")
-    print(f"✓ Classes: {le.classes_.tolist()}")
-except Exception as e:
-    print(f"✗ Model load failed: {e}")
-    print("  Fallback rule-based logic will be used")
+def load_model():
+    global model, le, MODEL_LOADED
+    if MODEL_LOADED:
+        return True
+    try:
+        model = joblib.load("risk_model.pkl")
+        le = joblib.load("label_encoder.pkl")
+        MODEL_LOADED = True
+        print("Model loaded successfully")
+        print(f"Classes: {le.classes_.tolist()}")
+        return True
+    except Exception as e:
+        print(f"Model load failed: {e}")
+        return False
 
 FEATURES = [
     "rain_current",
@@ -84,6 +91,9 @@ def rule_based_fallback(r: PredictRequest):
 # ── Endpoints ──────────────────────────────────────────────
 @app.get("/health")
 def health():
+    # Try loading model if not loaded yet
+    if not MODEL_LOADED:
+        load_model()
     return {
         "status": "ok",
         "model_loaded": MODEL_LOADED,
@@ -92,6 +102,8 @@ def health():
 
 @app.post("/predict", response_model=PredictResponse)
 def predict(request: PredictRequest):
+    if not MODEL_LOADED:
+        load_model()
 
     # Always try ML model first
     if MODEL_LOADED:
@@ -142,6 +154,8 @@ def predict(request: PredictRequest):
 
 @app.get("/model-info")
 def model_info():
+    if not MODEL_LOADED:
+        load_model()
     if not MODEL_LOADED:
         return {
             "status": "model not loaded",
