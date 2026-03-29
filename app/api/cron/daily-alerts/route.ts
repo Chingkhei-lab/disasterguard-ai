@@ -44,40 +44,92 @@ function buildAlertText(riskLevel: RiskLevel, riskType: PredictResponse["risk_ty
 }
 
 async function processSubscription(
-  origin: string,
   token: string,
   subscription: Subscription,
 ): Promise<boolean> {
   console.log("Fetching weather for:", subscription.location_name, subscription.latitude, subscription.longitude);
 
-  const weatherRes = await fetch(
-    `${origin}/api/weather?lat=${subscription.latitude}&lng=${subscription.longitude}&tomorrow=true`,
-    { method: "GET", cache: "no-store" },
+  const weatherUrl = new URL("https://api.open-meteo.com/v1/forecast");
+  weatherUrl.searchParams.set("latitude", subscription.latitude.toString());
+  weatherUrl.searchParams.set("longitude", subscription.longitude.toString());
+  weatherUrl.searchParams.set(
+    "hourly",
+    [
+      "rain",
+      "windspeed_10m",
+      "windgusts_10m",
+      "temperature_2m",
+      "relativehumidity_2m",
+      "surface_pressure",
+    ].join(","),
   );
+  weatherUrl.searchParams.set("forecast_days", "2");
+
+  const weatherRes = await fetch(weatherUrl.toString(), {
+    signal: AbortSignal.timeout(10_000),
+    cache: "no-store",
+  });
 
   if (!weatherRes.ok) {
     throw new Error(`Weather fetch failed for ${subscription.location_name}`);
   }
 
-  const weatherPayload = (await weatherRes.json()) as ApiResponse<WeatherData & { forecast_for: string }>;
-  const weatherData = weatherPayload.data;
+  const weatherJson = (await weatherRes.json()) as {
+    hourly?: {
+      rain: number[];
+      windspeed_10m: number[];
+      windgusts_10m: number[];
+      temperature_2m: number[];
+      relativehumidity_2m: number[];
+      surface_pressure: number[];
+    };
+  };
+  const hourly = weatherJson.hourly;
+
+  if (!hourly) {
+    throw new Error(`Weather response missing hourly data for ${subscription.location_name}`);
+  }
+
+  const tomorrowHours = {
+    rain: hourly.rain.slice(24, 48),
+    wind: hourly.windspeed_10m.slice(24, 48),
+    gusts: hourly.windgusts_10m.slice(24, 48),
+    temp: hourly.temperature_2m.slice(24, 48),
+    humidity: hourly.relativehumidity_2m.slice(24, 48),
+    pressure: hourly.surface_pressure.slice(24, 48),
+  };
+
+  const max = (arr: number[]) => Math.max(...arr);
+  const min = (arr: number[]) => Math.min(...arr);
+  const sum = (arr: number[]) => arr.reduce((a, b) => a + b, 0);
+  const avg = (arr: number[]) => sum(arr) / arr.length;
+
+  const weatherData: WeatherData = {
+    rain_current: max(tomorrowHours.rain),
+    rain_24h_forecast: sum(tomorrowHours.rain),
+    wind_speed: max(tomorrowHours.wind),
+    wind_gusts: max(tomorrowHours.gusts),
+    temperature: max(tomorrowHours.temp),
+    humidity: max(tomorrowHours.humidity),
+    pressure: min(tomorrowHours.pressure),
+    soil_moisture: (max(tomorrowHours.rain) / 100) * 0.6 + (avg(tomorrowHours.humidity) / 100) * 0.4,
+  };
   console.log("Weather result:", JSON.stringify(weatherData));
 
   console.log("Calling ML service...");
 
-  const riskRes = await fetch(`${origin}/api/risk`, {
+  const riskRes = await fetch(`${process.env.ML_SERVICE_URL}/predict`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(weatherData),
-    cache: "no-store",
+    signal: AbortSignal.timeout(15_000),
   });
 
   if (!riskRes.ok) {
     throw new Error(`Risk fetch failed for ${subscription.location_name}`);
   }
 
-  const riskPayload = (await riskRes.json()) as ApiResponse<PredictResponse>;
-  const result = riskPayload.data;
+  const result = (await riskRes.json()) as PredictResponse;
   console.log("Risk result:", JSON.stringify(result));
 
   if (result.risk_level === "NORMAL") {
@@ -86,7 +138,11 @@ async function processSubscription(
 
   console.log("Sending alert for risk level:", result.risk_level);
 
-  const alertText = buildAlertText(result.risk_level, result.risk_type, subscription.location_name, weatherData.forecast_for);
+  const tomorrowDate = new Date();
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+  const forecastDate = tomorrowDate.toISOString().split("T")[0] || "tomorrow";
+
+  const alertText = buildAlertText(result.risk_level, result.risk_type, subscription.location_name, forecastDate);
 
   await axios.post(
     `https://api.telegram.org/bot${token}/sendMessage`,
@@ -125,7 +181,6 @@ export async function GET(request: Request) {
       );
     }
 
-    const origin = new URL(request.url).origin;
     const subscriptions = await getSubscriptions();
     console.log("Found subscriptions:", subscriptions.length);
 
@@ -133,7 +188,7 @@ export async function GET(request: Request) {
 
     for (const subscription of subscriptions) {
       try {
-        const sent = await processSubscription(origin, token, subscription);
+        const sent = await processSubscription(token, subscription);
         if (sent) {
           processed += 1;
         }
