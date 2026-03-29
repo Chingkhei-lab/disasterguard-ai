@@ -48,6 +48,8 @@ async function processSubscription(
   token: string,
   subscription: Subscription,
 ): Promise<boolean> {
+  console.log("Fetching weather for:", subscription.location_name, subscription.latitude, subscription.longitude);
+
   const weatherRes = await fetch(
     `${origin}/api/weather?lat=${subscription.latitude}&lng=${subscription.longitude}&tomorrow=true`,
     { method: "GET", cache: "no-store" },
@@ -59,6 +61,9 @@ async function processSubscription(
 
   const weatherPayload = (await weatherRes.json()) as ApiResponse<WeatherData & { forecast_for: string }>;
   const weatherData = weatherPayload.data;
+  console.log("Weather result:", JSON.stringify(weatherData));
+
+  console.log("Calling ML service...");
 
   const riskRes = await fetch(`${origin}/api/risk`, {
     method: "POST",
@@ -73,10 +78,13 @@ async function processSubscription(
 
   const riskPayload = (await riskRes.json()) as ApiResponse<PredictResponse>;
   const result = riskPayload.data;
+  console.log("Risk result:", JSON.stringify(result));
 
   if (result.risk_level === "NORMAL") {
     return false;
   }
+
+  console.log("Sending alert for risk level:", result.risk_level);
 
   const alertText = buildAlertText(result.risk_level, result.risk_type, subscription.location_name, weatherData.forecast_for);
 
@@ -119,6 +127,7 @@ export async function GET(request: Request) {
 
     const origin = new URL(request.url).origin;
     const subscriptions = await getSubscriptions();
+    console.log("Found subscriptions:", subscriptions.length);
 
     let processed = 0;
 
@@ -129,6 +138,7 @@ export async function GET(request: Request) {
           processed += 1;
         }
       } catch (error) {
+        console.error("Error at step subscription processing:", error instanceof Error ? error.message : error);
         console.error("daily-alerts subscription failed", {
           telegramId: subscription.telegram_id,
           location: subscription.location_name,
@@ -139,6 +149,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ success: true, data: { processed }, processed, error: null });
   } catch (error) {
+    console.error("Error at step cron route:", error instanceof Error ? error.message : error);
     const message = error instanceof Error ? error.message : "Daily alerts cron failed";
     return NextResponse.json(
       { success: false, data: null, processed: 0, error: message },

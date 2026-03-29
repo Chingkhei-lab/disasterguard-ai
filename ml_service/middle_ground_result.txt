@@ -1,0 +1,28 @@
+Loading datasets...
+Upsampling and training...
+
+--- CLASSIFICATION REPORT ---
+                   precision    recall  f1-score   support
+
+ CRITICAL_CYCLONE       0.74      1.00      0.85        72
+   CRITICAL_FLOOD       0.70      0.99      0.82      1010
+CRITICAL_HEATWAVE       0.81      0.97      0.89       144
+     HIGH_CYCLONE       0.68      1.00      0.81       288
+       HIGH_FLOOD       0.71      0.99      0.83      1517
+    HIGH_HEATWAVE       0.75      1.00      0.85       218
+ MODERATE_CYCLONE       0.67      1.00      0.80       745
+   MODERATE_FLOOD       0.98      0.99      0.98      1331
+MODERATE_HEATWAVE       0.99      0.99      0.99       483
+      NORMAL_NONE       1.00      0.91      0.95     19248
+
+         accuracy                           0.93     25056
+        macro avg       0.80      0.98      0.88     25056
+     weighted avg       0.95      0.93      0.94     25056
+
+Size: 27.9 MB
+
+--- Sanity checks ---
+  Flood: CRITICAL_FLOOD (0.49)
+  Storm: NORMAL_NONE (0.40)
+  Heat: MODERATE_HEATWAVE (0.65)
+  Normal: NORMAL_NONE (0.65)
