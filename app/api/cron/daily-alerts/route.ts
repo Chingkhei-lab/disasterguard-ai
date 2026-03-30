@@ -40,7 +40,7 @@ function buildAlertText(riskLevel: RiskLevel, riskType: PredictResponse["risk_ty
     actionText = `Stay alert and follow local guidance.`;
   }
 
-  return `⚠️ DisasterGuard AI\nTomorrow (${date}) forecast for ${safeLocation}:\nRisk: ${riskLevel} ${riskType}\n${actionText}\nStay safe.`;
+    return `⚠️ DisasterGuard AI\nTomorrow (${date}) forecast for ${safeLocation}:\nRisk: ${riskLevel} ${riskType}\n${actionText}\nStay safe.`;
 }
 
 async function processSubscription(
