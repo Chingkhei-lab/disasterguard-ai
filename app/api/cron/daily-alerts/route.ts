@@ -122,7 +122,7 @@ async function processSubscription(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(weatherData),
-    signal: AbortSignal.timeout(15_000),
+    signal: AbortSignal.timeout(30_000),
   });
 
   if (!riskRes.ok) {
@@ -183,6 +183,18 @@ export async function GET(request: Request) {
 
     const subscriptions = await getSubscriptions();
     console.log("Found subscriptions:", subscriptions.length);
+
+    // Wake up Render ML service before processing
+    console.log("Waking up ML service...");
+    try {
+      await fetch(`${process.env.ML_SERVICE_URL}/health`, {
+        signal: AbortSignal.timeout(60_000),
+        cache: "no-store",
+      });
+      console.log("ML service is awake");
+    } catch {
+      console.log("ML service wake-up failed but continuing...");
+    }
 
     let processed = 0;
 
