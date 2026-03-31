@@ -97,7 +97,7 @@ export function RiskResult({ result, location, weatherData }: RiskResultProps) {
         <progress className="h-2 w-full overflow-hidden rounded-full [&::-webkit-progress-bar]:bg-slate-700 [&::-webkit-progress-value]:bg-[#3b82f6]" max={100} value={confidencePercent} />
       </div>
 
-      {result.fallback_used ? (
+      {result.fallback_used && result.risk_level !== "NORMAL" ? (
         <span className="inline-block rounded-full border border-yellow-500/60 bg-yellow-400/20 px-3 py-1 text-xs font-semibold text-yellow-200">
           Rule-based fallback active
         </span>

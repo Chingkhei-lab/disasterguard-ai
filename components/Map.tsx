@@ -8,6 +8,11 @@ import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "re
 
 import { MAP_DEFAULT } from "@/lib/constants";
 
+const NE_INDIA_BOUNDS = [
+  [20.0, 87.0],  // Southwest corner
+  [30.0, 97.5],  // Northeast corner
+] as [[number, number], [number, number]];
+
 export type FireMarkerData = {
   lat: number;
   lng: number;
@@ -85,6 +90,10 @@ export function Map({ fires, disasters, selectedLocation, onLocationClick }: Map
       zoom={MAP_DEFAULT.zoom}
       className="h-full w-full rounded-xl"
       scrollWheelZoom
+      maxBounds={NE_INDIA_BOUNDS}
+      maxBoundsViscosity={1.0}
+      minZoom={6}
+      maxZoom={14}
     >
       <TileLayer
         attribution="&copy; OpenStreetMap contributors"

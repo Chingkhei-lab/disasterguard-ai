@@ -124,7 +124,21 @@ function MapPageContent() {
 
   const analyzeLocation = async (lat: number, lng: number, label?: string) => {
     setSelectedLocation({ lat, lng });
-    setLocationName(label ?? `Lat ${lat.toFixed(3)}, Lng ${lng.toFixed(3)}`);
+    let displayName = label;
+    if (!displayName) {
+      // Try to find nearest preset location
+      let nearest = null;
+      let minDist = Infinity;
+      for (const loc of SUBSCRIBE_LOCATIONS) {
+        const dist = Math.pow(loc.lat - lat, 2) + Math.pow(loc.lng - lng, 2);
+        if (dist < minDist) {
+          minDist = dist;
+          nearest = loc;
+        }
+      }
+      displayName = nearest?.name ?? "Selected location";
+    }
+    setLocationName(displayName);
     setIsAnalyzing(true);
 
     try {

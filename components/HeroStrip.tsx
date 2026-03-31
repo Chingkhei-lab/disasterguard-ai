@@ -40,11 +40,14 @@ function getWorstLevel(regions: RegionStatus[]): RiskLevel {
 export function HeroStrip({ regions, lastUpdated }: HeroStripProps) {
   const worstLevel = getWorstLevel(regions);
   const stripColorClass = STRIP_CLASS_BY_HEX[COLOR_HEX_BY_LEVEL[worstLevel]] ?? "bg-[#1e293b]";
+  const statusText = worstLevel === "NORMAL"
+    ? "All Clear — No Active Threats"
+    : `${worstLevel} WARNING`;
 
   return (
     <section className={`${stripColorClass} rounded-xl border border-white/20 p-4 text-white`}>
       <p className="text-sm font-medium">Last updated: {lastUpdated} IST</p>
-      <p className="mt-1 text-lg font-bold">Overall status: {worstLevel} WARNING</p>
+      <p className="mt-1 text-lg font-bold">Overall status: {statusText}</p>
     </section>
   );
 }

@@ -15,7 +15,14 @@ type ApiResponse<T> = {
 
 // Removed WeatherApiData, readFirst, and toWeatherData functions since we're using the pre-aggregated data from the API now.
 
-function buildAlertText(riskLevel: RiskLevel, riskType: PredictResponse["risk_type"], location: string, date: string): string {
+function buildAlertText(
+  riskLevel: RiskLevel,
+  riskType: PredictResponse["risk_type"],
+  location: string,
+  date: string,
+  weatherData: WeatherData,
+  confidence: number,
+): string {
   const safeLocation = location || "your area";
   let actionText = "";
 
@@ -40,7 +47,34 @@ function buildAlertText(riskLevel: RiskLevel, riskType: PredictResponse["risk_ty
     actionText = `Stay alert and follow local guidance.`;
   }
 
-    return `⚠️ DisasterGuard AI\nTomorrow (${date}) forecast for ${safeLocation}:\nRisk: ${riskLevel} ${riskType}\n${actionText}\nStay safe.`;
+  const emoji =
+    riskLevel === "CRITICAL" ? "🔴"
+      : riskLevel === "HIGH" ? "⚠️"
+        : riskLevel === "MODERATE" ? "🟡"
+          : "⚪";
+  const formatValue = (value: number): string => {
+    if (!Number.isFinite(value)) {
+      return "0";
+    }
+
+    const fixed = value.toFixed(1);
+    return fixed.endsWith(".0") ? fixed.slice(0, -2) : fixed;
+  };
+  const confidencePercent = confidence <= 1 ? confidence * 100 : confidence;
+  const confidenceText = Math.max(0, Math.min(100, Math.round(confidencePercent)));
+
+  return `${emoji} DisasterGuard AI — ${riskLevel} ${riskType}
+Tomorrow (${date}) for ${safeLocation}
+
+Forecast:
+• Rainfall: ${formatValue(weatherData.rain_24h_forecast)}mm expected
+• Max wind: ${formatValue(weatherData.wind_speed)} km/h (gusts ${formatValue(weatherData.wind_gusts)} km/h)
+• Temperature: ${formatValue(weatherData.temperature)}°C
+• Humidity: ${formatValue(weatherData.humidity)}%
+
+${actionText}
+
+Confidence: ${confidenceText}%`;
 }
 
 async function processSubscription(
@@ -140,9 +174,20 @@ async function processSubscription(
 
   const tomorrowDate = new Date();
   tomorrowDate.setDate(tomorrowDate.getDate() + 1);
-  const forecastDate = tomorrowDate.toISOString().split("T")[0] || "tomorrow";
+  const forecastDate = tomorrowDate.toLocaleDateString("en-IN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
-  const alertText = buildAlertText(result.risk_level, result.risk_type, subscription.location_name, forecastDate);
+  const alertText = buildAlertText(
+    result.risk_level,
+    result.risk_type,
+    subscription.location_name,
+    forecastDate,
+    weatherData,
+    result.confidence,
+  );
 
   await axios.post(
     `https://api.telegram.org/bot${token}/sendMessage`,
