@@ -6,11 +6,9 @@ import L from "leaflet";
 import { useEffect } from "react";
 import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
 
-import { MAP_DEFAULT } from "@/lib/constants";
-
 const NE_INDIA_BOUNDS = [
-  [20.0, 87.0],  // Southwest corner
-  [30.0, 97.5],  // Northeast corner
+  [22.0, 89.0],  // Southwest — below Tripura
+  [29.5, 97.5],  // Northeast — above Arunachal
 ] as [[number, number], [number, number]];
 
 export type FireMarkerData = {
@@ -86,14 +84,15 @@ function RecenterMap({ selectedLocation }: { selectedLocation: SelectedLocation 
 export function Map({ fires, disasters, selectedLocation, onLocationClick }: MapProps) {
   return (
     <MapContainer
-      center={MAP_DEFAULT.center}
-      zoom={MAP_DEFAULT.zoom}
-      className="h-full w-full rounded-xl"
-      scrollWheelZoom
+      center={[25.5, 93.0]}
+      zoom={7}
+      minZoom={7}
+      maxZoom={14}
       maxBounds={NE_INDIA_BOUNDS}
       maxBoundsViscosity={1.0}
-      minZoom={6}
-      maxZoom={14}
+      style={{ height: "100%", width: "100%" }}
+      className="rounded-xl"
+      scrollWheelZoom
     >
       <TileLayer
         attribution="&copy; OpenStreetMap contributors"
