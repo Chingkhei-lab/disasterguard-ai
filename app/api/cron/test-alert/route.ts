@@ -68,8 +68,17 @@ ${actionText}
 Confidence: ${confidenceText}%`;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const secret = searchParams.get('secret')
+    if (secret !== process.env.CRON_SECRET) {
+      return NextResponse.json(
+        { success: false, data: null, error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+
     const token = process.env.TELEGRAM_BOT_TOKEN;
     if (!token) {
       return NextResponse.json(
