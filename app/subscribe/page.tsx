@@ -141,10 +141,10 @@ function SubscribePageContent() {
           </div>
 
           <div className="rounded-md border border-slate-700 bg-slate-900/40 p-3">
-            <p className="font-medium text-slate-100">3. The bot will reply with your Chat ID number</p>
-            <p className="mt-1">Copy that number and paste it below</p>
+            <p className="font-medium text-slate-100">3. To get your Telegram Chat ID, message @userinfobot</p>
+            <p className="mt-1">Copy the Chat ID it sends and paste it below.</p>
             <p className="mt-2 text-xs text-slate-400">
-              Alternatively, message <a href="https://t.me/userinfobot" target="_blank" rel="noreferrer" className="text-sky-300 underline decoration-sky-300/50 underline-offset-2 hover:text-sky-200">@userinfobot</a> on Telegram to get your Chat ID
+              Message <a href="https://t.me/userinfobot" target="_blank" rel="noreferrer" className="text-sky-300 underline decoration-sky-300/50 underline-offset-2 hover:text-sky-200">@userinfobot</a> on Telegram to get your Chat ID.
             </p>
           </div>
         </div>
