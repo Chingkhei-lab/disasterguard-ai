@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Send } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, Suspense } from "react";
 import { SUBSCRIBE_LOCATIONS } from "@/lib/constants";
@@ -117,11 +117,36 @@ function SubscribePageContent() {
         <h1 className="text-2xl font-bold text-white">Get Early Warning Alerts</h1>
         <p className="mt-1 text-sm text-slate-300">Delivered to your Telegram</p>
 
-        <div className="mt-6 space-y-2 rounded-lg bg-slate-800/70 p-4 text-sm text-slate-200">
-          <p className="font-semibold text-slate-100">Step 1</p>
-          <p>Open Telegram and search @DisasterGuardBot</p>
-          <p>Send /start to the bot to get your Chat ID</p>
-          <p>Copy the Chat ID number it sends back</p>
+        <div className="mt-6 space-y-4 rounded-lg bg-slate-800/70 p-4 text-sm text-slate-200">
+          <p className="font-semibold text-slate-100">Step 1: Set up your Telegram Bot</p>
+
+          <div className="rounded-md border border-slate-700 bg-slate-900/40 p-3">
+            <p className="font-medium text-slate-100">1. Open our Telegram Bot</p>
+            <a
+              href="https://t.me/DisasterGuardBot"
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2 inline-flex items-center gap-2 rounded-md bg-[#3b82f6] px-3 py-2 font-semibold text-white transition hover:bg-[#2563eb]"
+            >
+              <Send className="h-4 w-4" aria-hidden="true" />
+              <span>Open @DisasterGuardBot on Telegram</span>
+            </a>
+          </div>
+
+          <div className="rounded-md border border-slate-700 bg-slate-900/40 p-3">
+            <p className="font-medium text-slate-100">2. Send /start to the bot to activate it</p>
+            <pre className="mt-2 overflow-x-auto rounded-md border border-cyan-500/40 bg-cyan-500/10 px-3 py-2 text-cyan-200">
+              <code>/start</code>
+            </pre>
+          </div>
+
+          <div className="rounded-md border border-slate-700 bg-slate-900/40 p-3">
+            <p className="font-medium text-slate-100">3. The bot will reply with your Chat ID number</p>
+            <p className="mt-1">Copy that number and paste it below</p>
+            <p className="mt-2 text-xs text-slate-400">
+              Alternatively, message <a href="https://t.me/userinfobot" target="_blank" rel="noreferrer" className="text-sky-300 underline decoration-sky-300/50 underline-offset-2 hover:text-sky-200">@userinfobot</a> on Telegram to get your Chat ID
+            </p>
+          </div>
         </div>
 
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
