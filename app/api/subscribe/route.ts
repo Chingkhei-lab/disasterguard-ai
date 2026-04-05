@@ -45,6 +45,33 @@ export async function POST(request: Request) {
       );
     }
 
+    const { createClient } = await import("@supabase/supabase-js");
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
+
+    const { data: existing, error: existingError } = await supabase
+      .from("subscriptions")
+      .select("id, location_name")
+      .eq("telegram_id", body.telegramId)
+      .single();
+
+    if (existingError && existingError.code !== "PGRST116") {
+      throw new Error(`Failed to check existing subscription: ${existingError.message}`);
+    }
+
+    if (existing) {
+      return NextResponse.json(
+        {
+          success: false,
+          data: null,
+          error: `Already subscribed for ${existing.location_name}. Unsubscribe first to change location.`,
+        },
+        { status: 409 },
+      );
+    }
+
     await saveSubscription({
       telegram_id: body.telegramId,
       location_name: body.locationName,
@@ -64,7 +91,10 @@ export async function POST(request: Request) {
     if (!botToken) {
       return NextResponse.json({
         success: true,
-        data: { message: "Subscribed successfully. Bot message pending." },
+        data: {
+          message:
+            "Subscribed successfully. Check your Telegram — if no message arrived, send /start to @DisasterGuardBot first.",
+        },
         error: null,
       });
     }
@@ -87,7 +117,10 @@ export async function POST(request: Request) {
 
       return NextResponse.json({
         success: true,
-        data: { message: "Subscribed successfully. Bot message pending." },
+        data: {
+          message:
+            "Subscribed successfully. Check your Telegram — if no message arrived, send /start to @DisasterGuardBot first.",
+        },
         error: null,
       });
     }
@@ -95,7 +128,6 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       data: { message: "Subscribed successfully" },
-      message: "Subscribed successfully",
       error: null,
     });
   } catch (error) {
